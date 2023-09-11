@@ -28,7 +28,7 @@ contract MultiSigWallet is Initializable{
         bytes data;
         bool executed;
         uint numConfirmations;
-        address[] confirmor;
+        address[] confirmers;
     }
     struct Phase {
         uint startHeight;
@@ -106,7 +106,7 @@ contract MultiSigWallet is Initializable{
                 data: _data,
                 executed: false,
                 numConfirmations: 0,
-                confirmor:new address[](0)
+                confirmers:new address[](0)
             })
         );
 
@@ -120,7 +120,7 @@ contract MultiSigWallet is Initializable{
         Transaction storage transaction = transactions[_txIndex];
         transaction.numConfirmations += 1;
         isConfirmed[_txIndex][msg.sender] = true;
-        transaction.confirmor.push(msg.sender);  //
+        transaction.confirmers.push(msg.sender);  //
         emit ConfirmTransaction(msg.sender, _txIndex);
     }
 
@@ -149,11 +149,14 @@ contract MultiSigWallet is Initializable{
         uint _txIndex
     ) public onlyOwner txExists(_txIndex) notExecuted(_txIndex) {
         Transaction storage transaction = transactions[_txIndex];
-         address[] memory confirmor =  transaction.confirmor;
+         address[] storage confirmers =  transaction.confirmers;
         require(isConfirmed[_txIndex][msg.sender], "tx not confirmed");
         
-        uint index = indexOf(confirmor, msg.sender); 
-        deleteElement(confirmor, index);
+        uint index = indexOf(confirmers, msg.sender); 
+        require(index < confirmers.length, "Index out of bounds");
+        confirmers[index] = confirmers[confirmers.length-1];
+        confirmers.pop();
+        transaction.confirmers = confirmers;
         transaction.numConfirmations -= 1;
         isConfirmed[_txIndex][msg.sender] = false;
         
@@ -175,7 +178,8 @@ contract MultiSigWallet is Initializable{
             uint value,
             bytes memory data,
             bool executed,
-            uint numConfirmations
+            uint numConfirmations,
+            address[] memory confirmers
         )
     {
         Transaction storage transaction = transactions[_txIndex];
@@ -185,7 +189,8 @@ contract MultiSigWallet is Initializable{
             transaction.value,
             transaction.data,
             transaction.executed,
-            transaction.numConfirmations
+            transaction.numConfirmations,
+            transaction.confirmers
         );
     }
 
@@ -237,21 +242,5 @@ contract MultiSigWallet is Initializable{
             }
         }        
        revert("Not Found");
-    }
-
-     function deleteElement(address[] memory addressArr,uint index) public pure {
-        // Out of bounds check
-        require(index < addressArr.length, "Index out of bounds");
-
-        // Delete does not change the array length.
-        // It resets the value at index to it's default value,
-        // in this case 0
-        delete addressArr[index];
-    }
-
-
- 
-
-    
-   
+    } 
 }
