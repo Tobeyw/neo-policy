@@ -43,8 +43,9 @@ contract MultiSigWallet is Initializable{
     
     modifier onlyOwner() {
         //get owner from governance contract
-        // address[] owners = getCurrentConsensus();   //???  获取的owner有没有重复元素
-        owners = getCurrentConsensus();          
+        // address[] owners = getCurrentConsensus();   //
+        owners = getCurrentConsensus(); 
+        numConfirmationsRequired = threshold(owners.length);         
         require( containsValue(owners, msg.sender), "not owner");
         _;
     }
@@ -210,6 +211,18 @@ contract MultiSigWallet is Initializable{
         }        
         return false;
     }
+
+    function threshold (uint x) public pure  returns (uint) {        
+       uint b;
+
+       if (2*x % 3 ==0){
+           b = 2 * x /3;          
+       }else{
+          b = 2 * x /3 +1;
+       }
+
+        return b;    
+     }
 
     
    
