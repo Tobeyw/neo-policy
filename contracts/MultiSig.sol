@@ -149,12 +149,15 @@ contract MultiSigWallet is Initializable{
         uint _txIndex
     ) public onlyOwner txExists(_txIndex) notExecuted(_txIndex) {
         Transaction storage transaction = transactions[_txIndex];
-
+         address[] memory confirmor =  transaction.confirmor;
         require(isConfirmed[_txIndex][msg.sender], "tx not confirmed");
-
+        
+        uint index = indexOf(confirmor, msg.sender); 
+        deleteElement(confirmor, index);
         transaction.numConfirmations -= 1;
         isConfirmed[_txIndex][msg.sender] = false;
-        // transaction.confirmor.remove(msg.sender);
+        
+        
         emit RevokeConfirmation(msg.sender, _txIndex);
     }
 
@@ -223,6 +226,31 @@ contract MultiSigWallet is Initializable{
 
         return b;    
      }
+
+    function indexOf(address[] memory addressArr,address value) public pure returns (uint) {
+        // Loop through the array
+        for (uint i = 0; i < addressArr.length; i++) {
+            // Check if the element matches the value
+            if (addressArr[i] == value) {
+                // Return the index
+                return i;
+            }
+        }        
+       revert("Not Found");
+    }
+
+     function deleteElement(address[] memory addressArr,uint index) public pure {
+        // Out of bounds check
+        require(index < addressArr.length, "Index out of bounds");
+
+        // Delete does not change the array length.
+        // It resets the value at index to it's default value,
+        // in this case 0
+        delete addressArr[index];
+    }
+
+
+ 
 
     
    
