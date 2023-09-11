@@ -43,7 +43,6 @@ contract MultiSigWallet is Initializable{
     
     modifier onlyOwner() {
         //get owner from governance contract
-        // address[] owners = getCurrentConsensus();   //
         owners = getCurrentConsensus(); 
         numConfirmationsRequired = threshold(owners.length);         
         require( containsValue(owners, msg.sender), "not owner");
@@ -134,7 +133,6 @@ contract MultiSigWallet is Initializable{
             "cannot execute tx"
         );
         
-        //
         transaction.executed = true;
 
         (bool success, ) = transaction.to.call{value: transaction.value}(
